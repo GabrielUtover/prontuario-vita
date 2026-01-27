@@ -115,12 +115,15 @@ export function GerenciarUsuarios() {
         rqe: string | null
         especialidade: string | null
         ativo: boolean
-        usuarios: { nome: string; cpf: string }
-      }) => ({
-        ...p,
-        usuario_nome: p.usuarios?.nome,
-        usuario_cpf: p.usuarios?.cpf,
-      }))
+        usuarios: { nome: string; cpf: string } | { nome: string; cpf: string }[]
+      }) => {
+        const usuario = Array.isArray(p.usuarios) ? p.usuarios[0] : p.usuarios
+        return {
+          ...p,
+          usuario_nome: usuario?.nome,
+          usuario_cpf: usuario?.cpf,
+        }
+      })
       
       setProfissionais(profissionaisMapeados)
     } catch (err) {

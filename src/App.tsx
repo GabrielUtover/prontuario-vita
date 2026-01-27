@@ -516,7 +516,7 @@ function TiSettingsPage() {
                       Voltar para lista
                     </button>
                     <DocumentEditor 
-                      initialDocument={editingDocument?.data}
+                      initialDocument={editingDocument?.data as any}
                       documentName={editingDocument?.name}
                       onSave={(content, title) => {
                         console.log('Documento salvo:', { title, content })

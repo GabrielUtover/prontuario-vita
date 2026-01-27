@@ -282,7 +282,7 @@ export function CKEditorDocument({ initialContent = '', onSave, onExportPDF }: C
   const [showVariablesMenu, setShowVariablesMenu] = useState(false)
   const [pageOrientation, setPageOrientation] = useState<'portrait' | 'landscape'>('portrait')
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
-  const [savedMessage, setSavedMessage] = useState('')
+  // const [savedMessage, setSavedMessage] = useState('') // Removido: não utilizado
   const [activeRibbonTab, setActiveRibbonTab] = useState<RibbonTab>('inicio')
   const pageRef = useRef<HTMLDivElement>(null)
 
@@ -303,17 +303,17 @@ export function CKEditorDocument({ initialContent = '', onSave, onExportPDF }: C
   }, [editorInstance])
 
   // Substituir variáveis por valores reais
-  const replaceVariables = useCallback((content: string, values: Record<string, string>): string => {
-    let result = content
-    
-    // Substituir cada variável pelo seu valor
-    Object.entries(values).forEach(([key, value]) => {
-      const regex = new RegExp(key.replace(/[{}]/g, '\\$&'), 'g')
-      result = result.replace(regex, value)
-    })
-    
-    return result
-  }, [])
+  // const replaceVariables = useCallback((content: string, values: Record<string, string>): string => {
+  //   let result = content
+  //   
+  //   // Substituir cada variável pelo seu valor
+  //   Object.entries(values).forEach(([key, value]) => {
+  //     const regex = new RegExp(key.replace(/[{}]/g, '\\$&'), 'g')
+  //     result = result.replace(regex, value)
+  //   })
+  //   
+  //   return result
+  // }, []) // Removido: não utilizado
 
   // Salvar modelo
   const handleSave = useCallback(() => {
@@ -337,8 +337,8 @@ export function CKEditorDocument({ initialContent = '', onSave, onExportPDF }: C
     existingTemplates.push(template)
     localStorage.setItem('documentTemplates', JSON.stringify(existingTemplates))
     
-    setSavedMessage('Modelo salvo com sucesso!')
-    setTimeout(() => setSavedMessage(''), 3000)
+    // setSavedMessage('Modelo salvo com sucesso!')
+    // setTimeout(() => setSavedMessage(''), 3000) // Removido: variável não existe mais
     
     console.log('Template salvo:', template)
   }, [getEditorContent, title, onSave])
@@ -396,10 +396,10 @@ export function CKEditorDocument({ initialContent = '', onSave, onExportPDF }: C
   }, [getEditorContent, pageOrientation, title, onExportPDF])
 
   // Gerar documento com variáveis substituídas
-  const generateDocument = useCallback((variableValues: Record<string, string>) => {
-    const content = getEditorContent()
-    return replaceVariables(content, variableValues)
-  }, [getEditorContent, replaceVariables])
+  // const generateDocument = useCallback((variableValues: Record<string, string>) => {
+  //   const content = getEditorContent()
+  //   return replaceVariables(content, variableValues)
+  // }, [getEditorContent, replaceVariables]) // Removido: não utilizado
 
   // Agrupar variáveis por grupo
   const variablesByGroup = templateVariables.reduce((acc, variable) => {
@@ -710,28 +710,28 @@ export function CKEditorDocument({ initialContent = '', onSave, onExportPDF }: C
                 <div className="ribbon-group">
                   <span className="ribbon-group-title">Alinhamento</span>
                   <div className="ribbon-buttons row">
-                    <button className="ribbon-btn icon-only" onClick={() => executeCommand('alignment', { value: 'left' })} title="Alinhar à esquerda">
+                    <button className="ribbon-btn icon-only" onClick={() => { if (editorInstance) editorInstance.execute('alignment', { value: 'left' }); editorInstance?.editing.view.focus() }} title="Alinhar à esquerda">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="3" y1="6" x2="21" y2="6"/>
                         <line x1="3" y1="12" x2="15" y2="12"/>
                         <line x1="3" y1="18" x2="18" y2="18"/>
                       </svg>
                     </button>
-                    <button className="ribbon-btn icon-only" onClick={() => executeCommand('alignment', { value: 'center' })} title="Centralizar">
+                    <button className="ribbon-btn icon-only" onClick={() => { if (editorInstance) editorInstance.execute('alignment', { value: 'center' }); editorInstance?.editing.view.focus() }} title="Centralizar">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="3" y1="6" x2="21" y2="6"/>
                         <line x1="6" y1="12" x2="18" y2="12"/>
                         <line x1="4" y1="18" x2="20" y2="18"/>
                       </svg>
                     </button>
-                    <button className="ribbon-btn icon-only" onClick={() => executeCommand('alignment', { value: 'right' })} title="Alinhar à direita">
+                    <button className="ribbon-btn icon-only" onClick={() => { if (editorInstance) editorInstance.execute('alignment', { value: 'right' }); editorInstance?.editing.view.focus() }} title="Alinhar à direita">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="3" y1="6" x2="21" y2="6"/>
                         <line x1="9" y1="12" x2="21" y2="12"/>
                         <line x1="6" y1="18" x2="21" y2="18"/>
                       </svg>
                     </button>
-                    <button className="ribbon-btn icon-only" onClick={() => executeCommand('alignment', { value: 'justify' })} title="Justificar">
+                    <button className="ribbon-btn icon-only" onClick={() => { if (editorInstance) editorInstance.execute('alignment', { value: 'justify' }); editorInstance?.editing.view.focus() }} title="Justificar">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="3" y1="6" x2="21" y2="6"/>
                         <line x1="3" y1="12" x2="21" y2="12"/>

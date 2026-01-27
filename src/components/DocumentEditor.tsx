@@ -222,7 +222,7 @@ const ResizableImage = Image.extend({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ResizableImageComponent)
+    return ReactNodeViewRenderer(ResizableImageComponent as any)
   },
 })
 
@@ -270,9 +270,9 @@ interface DocumentEditorProps {
   documentName?: string
 }
 
-export function DocumentEditor({ onSave, initialDocument, documentName }: DocumentEditorProps) {
+export function DocumentEditor({ initialDocument }: DocumentEditorProps) {
   const [title, setTitle] = useState(initialDocument?.title || '')
-  const [saved, setSaved] = useState(false)
+  // const [saved, setSaved] = useState(false) // Removido: não utilizado
   const [activeTab, setActiveTab] = useState<ToolbarTab>('inicio')
   const [pageOrientation, setPageOrientation] = useState<PageOrientation>('portrait')
   const [fontFamily, setFontFamily] = useState<FontFamily>('Inter')
@@ -1068,25 +1068,27 @@ export function DocumentEditor({ onSave, initialDocument, documentName }: Docume
     }
 
     // Usar outputImg para capturar como imagem e então gerar PDF
-    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf: { internal: { pageSize: { getWidth: () => number; getHeight: () => number } }; deletePage: (page: number) => void; getNumberOfPages: () => number }) => {
+    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf: unknown) => {
+      const pdfObj = pdf as { internal: { pageSize: { getWidth: () => number; getHeight: () => number } }; deletePage: (page: number) => void; getNumberOfPages: () => number; save: () => Promise<void> }
       // Remover páginas extras, manter apenas a primeira
-      const totalPages = pdf.getNumberOfPages()
+      const totalPages = pdfObj.getNumberOfPages()
       for (let i = totalPages; i > 1; i--) {
-        pdf.deletePage(i)
+        pdfObj.deletePage(i)
       }
-    }).save().then(() => {
+      return pdfObj.save()
+    }).then(() => {
       // Restaurar estilos originais
       element.style.boxShadow = originalBoxShadow
     })
   }, [title, pageOrientation])
 
-  const handleSave = useCallback(() => {
-    if (editor && onSave) {
-      onSave(editor.getHTML(), title)
-    }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }, [editor, title, onSave])
+  // const handleSave = useCallback(() => {
+  //   if (editor && onSave) {
+  //     onSave(editor.getHTML(), title)
+  //   }
+  //   setSaved(true)
+  //   setTimeout(() => setSaved(false), 3000)
+  // }, [editor, title, onSave]) // Removido: não utilizado
 
   // Interface do modelo JSON
   interface DocumentModel {
@@ -1137,8 +1139,8 @@ export function DocumentEditor({ onSave, initialDocument, documentName }: Docume
     savedModels[modelName] = model
     localStorage.setItem('documentModels', JSON.stringify(savedModels))
     
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    // setSaved(true)
+    // setTimeout(() => setSaved(false), 3000) // Removido: variável não existe mais
     alert(`Modelo "${modelName}" salvo com sucesso!`)
   }, [createModel, title])
 
@@ -1245,47 +1247,12 @@ export function DocumentEditor({ onSave, initialDocument, documentName }: Docume
   }, [editor, pageObjects])
 
   // Carregar lista de modelos salvos
-  const getSavedModels = useCallback((): string[] => {
-    const savedModels = JSON.parse(localStorage.getItem('documentModels') || '{}')
-    return Object.keys(savedModels)
-  }, [])
+  // const getSavedModels = useCallback((): string[] => {
+  //   const savedModels = JSON.parse(localStorage.getItem('documentModels') || '{}')
+  //   return Object.keys(savedModels)
+  // }, []) // Removido: não utilizado
 
-  // Carregar um modelo salvo
-  const loadSavedModel = useCallback((modelName: string) => {
-    const savedModels = JSON.parse(localStorage.getItem('documentModels') || '{}')
-    const model = savedModels[modelName]
-    if (model) {
-      // Criar um arquivo temporário e usar importModel
-      const jsonString = JSON.stringify(model)
-      const blob = new Blob([jsonString], { type: 'application/json' })
-      const file = new File([blob], `${modelName}.json`, { type: 'application/json' })
-      
-      const reader = new FileReader()
-      reader.onload = (readerEvent) => {
-        try {
-          const loadedModel: DocumentModel = JSON.parse(readerEvent.target?.result as string)
-          
-          setTitle(loadedModel.title || '')
-          setPageOrientation(loadedModel.pageOrientation || 'portrait')
-          setFontFamily(loadedModel.fontFamily || 'Inter')
-          setFontSize(loadedModel.fontSize || 14)
-          setPageMargin(loadedModel.pageMargin || 20)
-          setBackgroundImage(loadedModel.backgroundImage || null)
-          setBackgroundOpacity(loadedModel.backgroundOpacity || 100)
-          setTotalPages(loadedModel.totalPages || 1)
-          
-          if (editor && loadedModel.content) {
-            editor.commands.setContent(loadedModel.content)
-          }
-          
-          alert(`Modelo "${modelName}" carregado!`)
-        } catch (error) {
-          console.error('Erro ao carregar:', error)
-        }
-      }
-      reader.readAsText(file)
-    }
-  }, [editor])
+  // Carregar um modelo salvo - removido: não utilizado
 
   // Force re-render when selection changes to update sidebar
   useEffect(() => {
@@ -1547,7 +1514,7 @@ export function DocumentEditor({ onSave, initialDocument, documentName }: Docume
                 <div className="ribbon-group">
                   <span className="ribbon-group-title">Tabelas</span>
                   <div className="ribbon-buttons">
-                    <button className="ribbon-btn large" onClick={addTable} title="Inserir tabela">
+                    <button className="ribbon-btn large" onClick={() => addTable()} title="Inserir tabela">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <line x1="3" y1="9" x2="21" y2="9"/>
@@ -1965,7 +1932,7 @@ export function DocumentEditor({ onSave, initialDocument, documentName }: Docume
                 <div className="ribbon-group">
                   <span className="ribbon-group-title">Inserir</span>
                   <div className="ribbon-buttons">
-                    <button className="ribbon-btn large" onClick={addTable} title="Inserir tabela 3x3">
+                    <button className="ribbon-btn large" onClick={() => addTable()} title="Inserir tabela 3x3">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <line x1="3" y1="9" x2="21" y2="9"/>

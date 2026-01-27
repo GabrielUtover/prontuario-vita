@@ -293,7 +293,7 @@ const formatDate = (dateString: string) => {
 
 export function ReceitasPage() {
   // Auth context
-  const { usuario, refreshUsuario } = useAuth()
+  const { usuario } = useAuth()
   
   // Estados
   const [pacientes, setPacientes] = useState<Paciente[]>([])
@@ -984,7 +984,7 @@ export function ReceitasPage() {
           console.warn('Modelo de receita especial não encontrado. Nome buscado:', modeloNome)
           alert('Receita salva com sucesso, mas o modelo de impressão não foi encontrado.')
         } else {
-          alert(`Receita ${tipo === 'especial' ? 'Especial' : 'Normal'} emitida com sucesso!`)
+          alert(`Receita Normal emitida com sucesso!`)
         }
       }
     } catch (err: any) {
@@ -1151,13 +1151,13 @@ export function ReceitasPage() {
     }
   }
 
-  const handleCopiarReceita = (receita: Receita) => {
-    setItensReceita(receita.itens)
-    setReceitaSelecionada(receita)
-    // Gerar texto da receita copiada
-    const texto = receita.observacao_geral || receita.itens.map(item => gerarTextoItem(item)).join('\n\n')
-    setTextoReceita(texto)
-  }
+  // const handleCopiarReceita = (receita: Receita) => {
+  //   setItensReceita(receita.itens)
+  //   setReceitaSelecionada(receita)
+  //   // Gerar texto da receita copiada
+  //   const texto = receita.observacao_geral || receita.itens.map(item => gerarTextoItem(item)).join('\n\n')
+  //   setTextoReceita(texto)
+  // } // Removido: não utilizado
 
   const handleVisualizarReceita = (receita: Receita) => {
     setReceitaVisualizando(receita)
@@ -1643,7 +1643,7 @@ export function ReceitasPage() {
           </div>
           <div className="form-field dose">
             <label>Dose</label>
-            <input type="text" value={novoItem.dose} onChange={(e) => setNovoItem({...novoItem, dose: e.target.value})} placeholder="Ex: 2" />
+            <input type="text" value={novoItem.dose || ''} onChange={(e) => setNovoItem({...novoItem, dose: e.target.value})} placeholder="Ex: 2" />
           </div>
           <div className="form-field unidade">
             <label>Unidade</label>
@@ -1657,7 +1657,7 @@ export function ReceitasPage() {
           </div>
           <div className="form-field quantidade">
             <label>Quantidade</label>
-            <input type="text" value={novoItem.quantidade} onChange={(e) => setNovoItem({...novoItem, quantidade: e.target.value})} placeholder="Ex: 1" />
+            <input type="text" value={novoItem.quantidade || ''} onChange={(e) => setNovoItem({...novoItem, quantidade: e.target.value})} placeholder="Ex: 1" />
           </div>
           <div className="form-field small">
             <label>Apresentação</label>
@@ -1693,7 +1693,7 @@ export function ReceitasPage() {
         <div className="form-row">
           <div className="form-field observacao">
             <label>Observação</label>
-            <input type="text" value={novoItem.observacao} onChange={(e) => setNovoItem({...novoItem, observacao: e.target.value})} placeholder="Ex: Uso contínuo, não suspender abruptamente" />
+            <input type="text" value={novoItem.observacao || ''} onChange={(e) => setNovoItem({...novoItem, observacao: e.target.value})} placeholder="Ex: Uso contínuo, não suspender abruptamente" />
           </div>
           <button className="btn-incluir-item" onClick={handleAddItem} disabled={!novoItem.medicacao}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
