@@ -92,9 +92,6 @@ export function ChatFab() {
 
   const currentUserId = usuario?.id
 
-  const isRecepcao = usuario?.funcao === 'recepcao'
-  const isProfissional = usuario?.is_profissional
-
   const canUseChat = !!currentUserId
 
   const selectedUser = useMemo(
