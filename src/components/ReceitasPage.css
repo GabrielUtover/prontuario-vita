@@ -16,8 +16,35 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: #1e3a5f;
+  background: #2E8E60;
   color: white;
+  gap: 16px;
+}
+
+.receitas-btn-voltar-prontuario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.receitas-btn-voltar-prontuario:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+.receitas-btn-voltar-prontuario svg {
+  flex-shrink: 0;
 }
 
 .header-info {
@@ -25,6 +52,8 @@
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .info-item {
@@ -159,6 +188,36 @@
   margin: 0;
 }
 
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-atualizar-lista {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-sage);
+  border: 1px solid var(--color-green);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-green-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-atualizar-lista:hover {
+  background: var(--color-green);
+  color: white;
+}
+
+.btn-atualizar-lista svg {
+  flex-shrink: 0;
+}
+
 .modal-header .close-btn {
   display: flex;
   align-items: center;
@@ -174,6 +233,36 @@
 
 .modal-header .close-btn:hover {
   background: #f5f5f5;
+}
+
+/* Abas do modal de paciente: Todos | Agenda do dia */
+.modal-paciente-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-paciente {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-paciente:hover {
+  color: var(--color-text);
+}
+
+.tab-paciente.active {
+  color: var(--color-green-dark);
+  border-bottom-color: var(--color-green);
+  font-weight: 600;
 }
 
 .modal-search {
@@ -219,6 +308,103 @@
 
 .link-cadastrar:hover {
   text-decoration: underline;
+}
+
+/* Popup Agenda do dia */
+.modal-agenda-popup {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-agenda-popup .modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-agenda-popup .modal-header h3 svg {
+  color: var(--color-green);
+}
+
+.agenda-popup-date {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.agenda-popup-hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 8px 0 0;
+}
+
+.agenda-popup-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.agenda-popup-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.agenda-popup-item:last-child {
+  border-bottom: none;
+}
+
+.agenda-popup-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agenda-popup-item-nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agenda-popup-item-tel {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.btn-selecionar-agenda {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--color-green);
+  border: 1px solid var(--color-green);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-selecionar-agenda:hover {
+  background: var(--color-green-dark);
 }
 
 .paciente-item {
@@ -311,6 +497,17 @@
 
 .toolbar-btn.primary:hover {
   background: var(--color-green-dark);
+}
+
+.toolbar-btn.agenda-btn {
+  background: var(--color-sage);
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+.toolbar-btn.agenda-btn:hover {
+  background: var(--color-green);
+  color: white;
 }
 
 .toolbar-btn.exit {
@@ -952,7 +1149,7 @@
 }
 
 .footer-btn.padrao {
-  background: #1e3a5f;
+  background: #2E8E60;
   border: none;
   color: white;
 }

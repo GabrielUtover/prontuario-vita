@@ -3,22 +3,21 @@ import { BrowserRouter, Link, Route, Routes, useNavigate } from 'react-router-do
 import { DocumentEditor } from './components/DocumentEditor'
 import { DocumentManager } from './components/DocumentManager'
 import { PacientesPage } from './components/PacientesPage'
+import { ProntuarioPage } from './components/ProntuarioPage'
+import { ProntuarioPacientePage } from './components/ProntuarioPacientePage'
 import { ReceitasPage } from './components/ReceitasPage'
+import { AgendaPage } from './components/AgendaPage'
 import { LoginPage } from './components/LoginPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { AppLayout } from './components/AppLayout'
 import { GerenciarUsuarios } from './components/GerenciarUsuarios'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
-// Página Home - Dashboard principal
+// Página Home - Dashboard principal (sidebar já mostra usuário e navegação)
 function HomePage() {
   const navigate = useNavigate()
-  const { usuario, signOut, isProfissional } = useAuth()
-
-  const handleLogout = async () => {
-    await signOut()
-    navigate('/')
-  }
+  const { isProfissional } = useAuth()
 
   const menuItems = [
     {
@@ -40,7 +39,7 @@ function HomePage() {
     {
       id: 'prontuarios',
       title: 'Prontuários',
-      description: 'Visualizar e editar prontuários',
+      description: 'Atendimentos abertos da agenda do dia',
       icon: (
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -51,7 +50,8 @@ function HomePage() {
         </svg>
       ),
       color: '#22c55e',
-      available: false
+      path: '/prontuarios',
+      available: true
     },
     {
       id: 'agenda',
@@ -66,7 +66,8 @@ function HomePage() {
         </svg>
       ),
       color: '#f59e0b',
-      available: false
+      path: '/agenda',
+      available: true
     },
     {
       id: 'receitas',
@@ -122,43 +123,6 @@ function HomePage() {
 
   return (
     <div className="home-page">
-      {/* Header */}
-      <header className="home-header">
-        <div className="home-header-content">
-          <div className="home-brand">
-            <div className="home-logo">
-              <span>SV</span>
-            </div>
-            <div>
-              <h1>Silafi Vita</h1>
-              <p>Prontuário Eletrônico</p>
-            </div>
-          </div>
-          <div className="home-user">
-            <div className="user-avatar">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-            <div className="user-info">
-              <span className="user-name">{usuario?.nome || 'Usuário'}</span>
-              <span className="user-role">
-                {isProfissional ? (usuario?.registro_completo || 'Profissional') : 'Usuário'}
-              </span>
-            </div>
-            <button onClick={handleLogout} className="logout-btn" title="Sair">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16,17 21,12 16,7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="home-main">
         <div className="home-welcome">
           <h2>Bem-vindo ao Sistema</h2>
@@ -197,7 +161,7 @@ function HomePage() {
 
       {/* Footer */}
       <footer className="home-footer">
-        <p>Silafi Vita © 2024 - Prontuário Eletrônico</p>
+        <p>Silafi Vita © 2025 - Utover Sistemas</p>
       </footer>
     </div>
   )
@@ -586,22 +550,15 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
-      <Route path="/home" element={
-        <ProtectedRoute>
-          <HomePage />
-        </ProtectedRoute>
-      } />
-      <Route path="/pacientes" element={
-        <ProtectedRoute>
-          <PacientesPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/receitas" element={
-        <ProtectedRoute requireProfissional>
-          <ReceitasPage />
-        </ProtectedRoute>
-      } />
       <Route path="/ti/*" element={<TiSettingsPage />} />
+      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route path="home" element={<HomePage />} />
+        <Route path="pacientes" element={<PacientesPage />} />
+        <Route path="prontuarios" element={<ProntuarioPage />} />
+        <Route path="prontuarios/paciente/:id" element={<ProntuarioPacientePage />} />
+        <Route path="agenda" element={<ProtectedRoute requireProfissional><AgendaPage /></ProtectedRoute>} />
+        <Route path="receitas" element={<ProtectedRoute requireProfissional><ReceitasPage /></ProtectedRoute>} />
+      </Route>
     </Routes>
   )
 }

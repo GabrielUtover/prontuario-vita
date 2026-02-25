@@ -1,0 +1,35 @@
+/* ===================================
+   APP LAYOUT - Sidebar fixa + área principal
+   =================================== */
+
+.app-layout {
+  --app-sidebar-width: 260px;
+  --app-sidebar-width-minimized: 80px;
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.app-layout-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--app-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.25s ease;
+}
+
+.app-layout-sidebar-minimized .app-layout-main {
+  margin-left: var(--app-sidebar-width-minimized);
+}
+
+@media (max-width: 768px) {
+  .app-layout-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .app-layout-sidebar-minimized .app-layout-main {
+    margin-left: 0;
+  }
+}

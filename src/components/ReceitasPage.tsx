@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { bundledDocuments } from '../data'
@@ -109,9 +109,14 @@ interface Paciente {
   nome: string
   cpf: string | null
   data_nascimento: string | null
+  sexo: 'masculino' | 'feminino' | 'nao_especificar' | null
   telefone: string | null
   email: string | null
   endereco: string | null
+  cep: string | null
+  numero: string | null
+  complemento: string | null
+  bairro: string | null
   cidade: string | null
   estado: string | null
   convenio: string | null
@@ -173,6 +178,19 @@ const posologiasPadrao = [
   'tomar 1 comp. em jejum',
   'aplicar na região afetada'
 ]
+
+// Data de hoje no formato YYYY-MM-DD
+const getHojeISO = () => new Date().toISOString().slice(0, 10)
+
+// Item da agenda do dia
+interface AgendaItem {
+  id: string
+  paciente_id: string
+  data_agenda: string
+  observacao: string | null
+  created_at: string
+  paciente?: Paciente
+}
 
 // Funções para carregar listas do banco de dados
 const loadListFromDB = async (tableName: string): Promise<string[]> => {
@@ -307,6 +325,9 @@ export function ReceitasPage() {
   const [showVisualizarModal, setShowVisualizarModal] = useState(false)
   const [receitaVisualizando, setReceitaVisualizando] = useState<Receita | null>(null)
   const [historicoExpandido, setHistoricoExpandido] = useState(true)
+  const [agendaDia, setAgendaDia] = useState<AgendaItem[]>([])
+  const [tabPacienteSelector, setTabPacienteSelector] = useState<'todos' | 'agenda'>('todos')
+  const [showAgendaPopup, setShowAgendaPopup] = useState(false)
   
   // Estados para Padrões de Receita
   const [padroes, setPadroes] = useState<ReceitaPadrao[]>([])
@@ -490,6 +511,84 @@ export function ReceitasPage() {
     loadListas()
     loadPadroes()
   }, [loadPacientes, loadReceitas, loadListas, loadPadroes])
+
+  // Carregar agenda do dia
+  const loadAgendaDia = useCallback(async () => {
+    const hoje = getHojeISO()
+    try {
+      const { data, error } = await supabase
+        .from('agenda_dia')
+        .select(`
+          id,
+          paciente_id,
+          data_agenda,
+          observacao,
+          created_at,
+          paciente:pacientes(*)
+        `)
+        .eq('data_agenda', hoje)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      setAgendaDia((data || []) as AgendaItem[])
+    } catch (err) {
+      console.error('Erro ao carregar agenda do dia:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadAgendaDia()
+  }, [loadAgendaDia])
+
+  const [searchParams] = useSearchParams()
+  useEffect(() => {
+    const pacienteId = searchParams.get('paciente')
+    if (pacienteId && pacientes.length > 0) {
+      const p = pacientes.find(x => x.id === pacienteId)
+      if (p) {
+        setPacienteSelecionado(p)
+        setShowPacienteSelector(false)
+      }
+    }
+  }, [searchParams, pacientes])
+
+  // Recarregar pacientes e agenda quando a aba/janela ganhar foco
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadPacientes()
+        loadAgendaDia()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [loadPacientes, loadAgendaDia])
+
+  // Atualizar lista automaticamente quando a recepção inserir/alterar um paciente (Supabase Realtime)
+  useEffect(() => {
+    const channel = supabase
+      .channel('receitas-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pacientes' },
+        () => {
+          loadPacientes()
+          loadAgendaDia()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'agenda_dia' },
+        () => {
+          loadAgendaDia()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadPacientes, loadAgendaDia])
 
   // Salvar receita no Supabase
   const saveReceita = async (receita: Receita) => {
@@ -1260,16 +1359,35 @@ export function ReceitasPage() {
   }
 
   // Pacientes filtrados para seleção
-  const pacientesFiltrados = pacientes.filter(p => 
-    p.status === 'ativo' && 
+  // Pacientes da agenda do dia (com dados completos)
+  const pacientesDaAgenda: Paciente[] = agendaDia
+    .map(item => item.paciente || pacientes.find(p => p.id === item.paciente_id))
+    .filter((p): p is Paciente => p != null && p.status === 'ativo')
+
+  const filtroPaciente = (p: Paciente) =>
+    p.status === 'ativo' &&
     (p.nome.toLowerCase().includes(searchPaciente.toLowerCase()) ||
      (p.cpf && p.cpf.includes(searchPaciente)))
-  )
+
+  const pacientesFiltrados =
+    tabPacienteSelector === 'agenda'
+      ? pacientesDaAgenda.filter(filtroPaciente)
+      : pacientes.filter(filtroPaciente)
+
+  const linkProntuario = pacienteSelecionado
+    ? `/prontuarios/paciente/${pacienteSelecionado.id}`
+    : '/prontuarios'
 
   return (
     <div className="receitas-page">
       {/* Header */}
       <header className="receitas-header">
+        <Link to={linkProntuario} className="receitas-btn-voltar-prontuario">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Voltar ao prontuário
+        </Link>
         <div className="header-info">
           {pacienteSelecionado ? (
             <>
@@ -1320,20 +1438,113 @@ export function ReceitasPage() {
         </div>
       </header>
 
+      {/* Popup Agenda do dia */}
+      {showAgendaPopup && (
+        <div className="modal-overlay" onClick={() => setShowAgendaPopup(false)}>
+          <div className="modal-agenda-popup" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Agenda do dia
+              </h3>
+              <button type="button" className="close-btn" onClick={() => setShowAgendaPopup(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <p className="agenda-popup-date">{formatDate(new Date().toISOString())}</p>
+            {agendaDia.length === 0 ? (
+              <div className="empty-list">
+                <p>Nenhum paciente agendado para hoje.</p>
+                <p className="agenda-popup-hint">Adicione pacientes na agenda pela tela de Pacientes.</p>
+              </div>
+            ) : (
+              <ul className="agenda-popup-list">
+                {agendaDia.map(item => {
+                  const p = item.paciente || pacientes.find(x => x.id === item.paciente_id)
+                  return (
+                    <li key={item.id} className="agenda-popup-item">
+                      <div className="agenda-popup-item-info">
+                        <span className="agenda-popup-item-nome">{p?.nome || '—'}</span>
+                        {p?.telefone && <span className="agenda-popup-item-tel">{p.telefone}</span>}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-selecionar-agenda"
+                        onClick={() => {
+                          if (p) {
+                            setPacienteSelecionado(p)
+                            setShowAgendaPopup(false)
+                            setShowPacienteSelector(false)
+                          }
+                        }}
+                      >
+                        Selecionar para receita
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modal Seleção de Paciente */}
       {showPacienteSelector && (
         <div className="modal-overlay" onClick={() => pacienteSelecionado && setShowPacienteSelector(false)}>
           <div className="modal-paciente" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{pacienteSelecionado ? 'Trocar Paciente' : 'Selecionar Paciente'}</h3>
-              {pacienteSelecionado && (
-                <button className="close-btn" onClick={() => setShowPacienteSelector(false)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+              <div className="modal-header-actions">
+                <button
+                  type="button"
+                  className="btn-atualizar-lista"
+                  onClick={() => {
+                    loadPacientes()
+                    loadAgendaDia()
+                  }}
+                  title="Atualizar lista de pacientes"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="23,4 23,10 17,10"/>
+                    <polyline points="1,20 1,14 7,14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                   </svg>
+                  Atualizar lista
                 </button>
-              )}
+                {pacienteSelecionado && (
+                  <button className="close-btn" onClick={() => setShowPacienteSelector(false)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="modal-paciente-tabs">
+              <button
+                type="button"
+                className={`tab-paciente ${tabPacienteSelector === 'todos' ? 'active' : ''}`}
+                onClick={() => setTabPacienteSelector('todos')}
+              >
+                Todos os pacientes
+              </button>
+              <button
+                type="button"
+                className={`tab-paciente ${tabPacienteSelector === 'agenda' ? 'active' : ''}`}
+                onClick={() => setTabPacienteSelector('agenda')}
+              >
+                Agenda do dia
+              </button>
             </div>
             <div className="modal-search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1361,10 +1572,18 @@ export function ReceitasPage() {
             <div className="modal-list">
               {pacientesFiltrados.length === 0 ? (
                 <div className="empty-list">
-                  <p>Nenhum paciente encontrado</p>
-                  <Link to="/pacientes" className="link-cadastrar">
-                    Cadastrar novo paciente
-                  </Link>
+                  <p>
+                    {tabPacienteSelector === 'agenda'
+                      ? agendaDia.length === 0
+                        ? 'Nenhum paciente na agenda de hoje.'
+                        : 'Nenhum paciente encontrado na busca.'
+                      : 'Nenhum paciente encontrado'}
+                  </p>
+                  {tabPacienteSelector === 'todos' && (
+                    <Link to="/pacientes" className="link-cadastrar">
+                      Cadastrar novo paciente
+                    </Link>
+                  )}
                 </div>
               ) : (
                 pacientesFiltrados.map(p => (
@@ -1600,6 +1819,15 @@ export function ReceitasPage() {
       {/* Toolbar */}
       <div className="receitas-toolbar">
         <div className="toolbar-left">
+          <button className="toolbar-btn agenda-btn" onClick={() => setShowAgendaPopup(true)} title="Agenda do dia">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Agenda
+          </button>
           <button className="toolbar-btn primary" onClick={handleLimpar}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
