@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext'
 interface ProtectedRouteProps {
   children: React.ReactNode
   requireProfissional?: boolean
+  allowRecepcao?: boolean
 }
 
-export function ProtectedRoute({ children, requireProfissional = false }: ProtectedRouteProps) {
-  const { user, loading, isProfissional } = useAuth()
+export function ProtectedRoute({ children, requireProfissional = false, allowRecepcao = false }: ProtectedRouteProps) {
+  const { user, loading, isProfissional, usuario } = useAuth()
   const location = useLocation()
 
   // Mostrar loading enquanto verifica autenticação
@@ -25,8 +26,13 @@ export function ProtectedRoute({ children, requireProfissional = false }: Protec
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  // Se requer profissional e não é profissional
-  if (requireProfissional && !isProfissional) {
+  const hasRequiredAccess =
+    !requireProfissional ||
+    isProfissional ||
+    (allowRecepcao && usuario?.funcao === 'recepcao')
+
+  // Se requer profissional e não tem acesso (nem profissional nem recepção quando permitido)
+  if (!hasRequiredAccess) {
     return (
       <div className="access-denied">
         <div className="access-denied-content">

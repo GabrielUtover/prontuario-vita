@@ -555,7 +555,14 @@ function AppRoutes() {
         <Route path="pacientes" element={<PacientesPage />} />
         <Route path="prontuarios" element={<ProntuarioPage />} />
         <Route path="prontuarios/paciente/:id" element={<ProntuarioPacientePage />} />
-        <Route path="agenda" element={<ProtectedRoute requireProfissional><AgendaPage /></ProtectedRoute>} />
+        <Route
+          path="agenda"
+          element={
+            <ProtectedRoute requireProfissional allowRecepcao>
+              <AgendaPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="receitas" element={<ProtectedRoute requireProfissional><ReceitasPage /></ProtectedRoute>} />
       </Route>
     </Routes>
