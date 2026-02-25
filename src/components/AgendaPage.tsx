@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
 import './AgendaPage.css'
 
 const PROCEDIMENTOS = [
@@ -39,30 +38,6 @@ interface AgendaItem {
   paciente?: Paciente
 }
 
-interface AgendaAbertura {
-  id: string
-  data_inicio: string
-  data_fim: string
-  seg: boolean
-  ter: boolean
-  qua: boolean
-  qui: boolean
-  sex: boolean
-  sab: boolean
-  dom: boolean
-  manha_ativo: boolean
-  manha_inicio: string | null
-  manha_fim: string | null
-  manha_pausa_inicio: string | null
-  manha_pausa_fim: string | null
-  tarde_ativo: boolean
-  tarde_inicio: string | null
-  tarde_fim: string | null
-  tarde_pausa_inicio: string | null
-  tarde_pausa_fim: string | null
-  created_at: string
-}
-
 const getHojeISO = () => new Date().toISOString().slice(0, 10)
 
 const formatDate = (dateStr: string) => {
@@ -92,12 +67,10 @@ const getMonthBounds = (year: number, month: number) => {
 const getProcedimentoLabel = (id: string) => PROCEDIMENTOS.find(p => p.id === id)?.label ?? id
 
 export function AgendaPage() {
-  const { usuario } = useAuth()
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [agendaMes, setAgendaMes] = useState<AgendaItem[]>([])
   const [agendaDiaSelecionado, setAgendaDiaSelecionado] = useState<AgendaItem[]>([])
-  const [aberturas, setAberturas] = useState<AgendaAbertura[]>([])
   const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingDia, setLoadingDia] = useState(false)
@@ -108,20 +81,6 @@ export function AgendaPage() {
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
-
-  const loadAberturas = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('agenda_abertura')
-        .select('*')
-        .order('data_inicio', { ascending: false })
-      if (error) throw error
-      setAberturas((data ?? []) as AgendaAbertura[])
-    } catch (err) {
-      console.error('Erro ao carregar aberturas:', err)
-      setAberturas([])
-    }
-  }, [])
 
   const loadAgendaMes = useCallback(async () => {
     setLoading(true)
@@ -138,7 +97,12 @@ export function AgendaPage() {
         .order('data_agenda')
         .order('horario')
       if (error) throw error
-      setAgendaMes((data || []) as AgendaItem[])
+      const rows = (data || []) as any[]
+      const formatted: AgendaItem[] = rows.map(row => ({
+        ...row,
+        paciente: Array.isArray(row.paciente) ? row.paciente[0] : row.paciente
+      }))
+      setAgendaMes(formatted)
     } catch (err) {
       console.error('Erro ao carregar agenda do mês:', err)
       setAgendaMes([])
@@ -159,7 +123,12 @@ export function AgendaPage() {
         .eq('data_agenda', dataISO)
         .order('horario')
       if (error) throw error
-      setAgendaDiaSelecionado((data || []) as AgendaItem[])
+      const rows = (data || []) as any[]
+      const formatted: AgendaItem[] = rows.map(row => ({
+        ...row,
+        paciente: Array.isArray(row.paciente) ? row.paciente[0] : row.paciente
+      }))
+      setAgendaDiaSelecionado(formatted)
     } catch (err) {
       console.error('Erro ao carregar dia:', err)
       setAgendaDiaSelecionado([])
@@ -186,10 +155,6 @@ export function AgendaPage() {
   useEffect(() => {
     loadAgendaMes()
   }, [loadAgendaMes])
-
-  useEffect(() => {
-    loadAberturas()
-  }, [loadAberturas])
 
   useEffect(() => {
     if (selectedDate) loadAgendaDia(selectedDate)
@@ -292,7 +257,7 @@ export function AgendaPage() {
             <div className="agenda-loading">Carregando calendário...</div>
           ) : (
             <div className="agenda-calendar-grid">
-              {calendarDays.map(({ date, iso, isCurrentMonth, dayNum }) => {
+              {calendarDays.map(({ iso, isCurrentMonth, dayNum }) => {
                 const { manha, tarde, total } = countByDay(iso)
                 const isSelected = selectedDate === iso
                 const isHoje = iso === getHojeISO()
@@ -397,7 +362,6 @@ export function AgendaPage() {
           onClose={() => setShowAbrirModal(false)}
           onSaved={() => {
             setShowAbrirModal(false)
-            loadAberturas()
             setMessage({ type: 'success', text: 'Agenda aberta com sucesso.' })
             setTimeout(() => setMessage(null), 3000)
           }}

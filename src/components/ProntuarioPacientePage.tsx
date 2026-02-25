@@ -13,8 +13,6 @@ const TIPOS_ANAMNESE = [
   { id: 'habitos_de_vida', label: 'Hábitos de Vida' }
 ] as const
 
-type TipoAnamnese = (typeof TIPOS_ANAMNESE)[number]['id']
-
 /** Tipos do popup "Dados do paciente" (anamnese + alergia) */
 const DADOS_PACIENTE_TIPOS = [
   ...TIPOS_ANAMNESE,
@@ -144,19 +142,6 @@ export function ProntuarioPacientePage() {
   const { usuario, user } = useAuth()
   const [paciente, setPaciente] = useState<Paciente | null>(null)
   const [timeline, setTimeline] = useState<TimelineItem[]>([])
-  const [tabAtivo, setTabAtivo] = useState<TipoAnamnese>('historia_medica_pregressa')
-  const [textos, setTextos] = useState<Record<TipoAnamnese, string>>({
-    historia_medica_pregressa: '',
-    antecedentes_pessoais: '',
-    antecedentes_familiares: '',
-    habitos_de_vida: ''
-  })
-  const [anamneseIds, setAnamneseIds] = useState<Record<TipoAnamnese, string | null>>({
-    historia_medica_pregressa: null,
-    antecedentes_pessoais: null,
-    antecedentes_familiares: null,
-    habitos_de_vida: null
-  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -201,7 +186,6 @@ export function ProntuarioPacientePage() {
   const [itemCancelar, setItemCancelar] = useState<TimelineItem | null>(null)
   const [motivoCancelamento, setMotivoCancelamento] = useState('')
   const [savingCancelar, setSavingCancelar] = useState(false)
-  const [mainAnamneseId, setMainAnamneseId] = useState<string | null>(null)
   const [mainAnamneseTexto, setMainAnamneseTexto] = useState('')
   const anamneseEditorRef = useRef<HTMLDivElement>(null)
 
@@ -250,54 +234,6 @@ export function ProntuarioPacientePage() {
       throw error
     }
     return (data || []) as AnamneseEntry[]
-  }, [])
-
-  const loadAnamneseHoje = useCallback(async (pacienteId: string) => {
-    const hoje = getHojeISO()
-    const { data, error } = await supabase
-      .from('anamnese')
-      .select('id, tipo, texto')
-      .eq('paciente_id', pacienteId)
-      .eq('data_consulta', hoje)
-    if (error) throw error
-    const ids: Record<TipoAnamnese, string | null> = {
-      historia_medica_pregressa: null,
-      antecedentes_pessoais: null,
-      antecedentes_familiares: null,
-      habitos_de_vida: null
-    }
-    ;(data || []).forEach((row: { id: string; tipo: string }) => {
-      if (TIPOS_ANAMNESE.some(t => t.id === row.tipo)) {
-        ids[row.tipo as TipoAnamnese] = row.id
-      }
-    })
-    setAnamneseIds(ids)
-    setMainAnamneseId(null)
-    setMainAnamneseTexto('')
-  }, [])
-
-  /** Carrega o conteúdo mais recente de cada tipo para exibir nos campos (sempre visível ao acessar) */
-  const loadAnamneseLatest = useCallback(async (pacienteId: string) => {
-    const { data, error } = await supabase
-      .from('anamnese')
-      .select('tipo, texto')
-      .eq('paciente_id', pacienteId)
-      .order('updated_at', { ascending: false })
-    if (error) throw error
-    const txt: Record<TipoAnamnese, string> = {
-      historia_medica_pregressa: '',
-      antecedentes_pessoais: '',
-      antecedentes_familiares: '',
-      habitos_de_vida: ''
-    }
-    const seen = new Set<TipoAnamnese>()
-    ;(data || []).forEach((row: { tipo: string; texto: string }) => {
-      if (TIPOS_ANAMNESE.some(t => t.id === row.tipo) && !seen.has(row.tipo as TipoAnamnese)) {
-        seen.add(row.tipo as TipoAnamnese)
-        txt[row.tipo as TipoAnamnese] = row.texto || ''
-      }
-    })
-    setTextos(txt)
   }, [])
 
   /** Carrega dados para o modal Dados do paciente: último texto + histórico por tipo (inclui alergia); exclui canceladas */
@@ -406,13 +342,12 @@ export function ProntuarioPacientePage() {
       })
       items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       setTimeline(items)
-      await Promise.all([loadAnamneseHoje(id), loadAnamneseLatest(id)])
     } catch (err) {
       console.error('Erro ao carregar prontuário:', err)
     } finally {
       setLoading(false)
     }
-  }, [id, loadPaciente, loadReceitas, loadAnamneseList, loadAnamneseHoje, loadAnamneseLatest])
+  }, [id, loadPaciente, loadReceitas, loadAnamneseList])
 
   useEffect(() => {
     loadAll()
@@ -463,7 +398,6 @@ export function ProntuarioPacientePage() {
       setMessage({ type: 'success', text: 'Anamnese salva no histórico.' })
       setTimeout(() => setMessage(null), 3000)
       await loadAll()
-      setMainAnamneseId(null)
       setMainAnamneseTexto('')
       if (anamneseEditorRef.current) anamneseEditorRef.current.innerHTML = ''
     } catch (err) {
@@ -576,9 +510,10 @@ export function ProntuarioPacientePage() {
       setDadosPacienteTextos(prev => ({ ...prev, alergia: item.fullText || '' }))
       setDadosPacienteTabAtivo('alergia')
       setShowDadosPacienteModal(true)
-    } else {
-      setTabAtivo(tipo)
-      setTextos(prev => ({ ...prev, [tipo]: item.fullText || '' }))
+    } else if (DADOS_PACIENTE_TIPOS.some(t => t.id === tipo)) {
+      setDadosPacienteTextos(prev => ({ ...prev, [tipo]: item.fullText || '' } as Record<TipoDadoPaciente, string>))
+      setDadosPacienteTabAtivo(tipo)
+      setShowDadosPacienteModal(true)
     }
   }
 

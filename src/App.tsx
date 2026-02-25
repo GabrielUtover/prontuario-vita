@@ -11,13 +11,12 @@ import { LoginPage } from './components/LoginPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
 import { GerenciarUsuarios } from './components/GerenciarUsuarios'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext'
 import './App.css'
 
 // Página Home - Dashboard principal (sidebar já mostra usuário e navegação)
 function HomePage() {
   const navigate = useNavigate()
-  const { isProfissional } = useAuth()
 
   const menuItems = [
     {

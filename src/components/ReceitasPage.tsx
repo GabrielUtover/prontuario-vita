@@ -530,7 +530,12 @@ export function ReceitasPage() {
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      setAgendaDia((data || []) as AgendaItem[])
+      const rows = (data || []) as any[]
+      const formatted: AgendaItem[] = rows.map(row => ({
+        ...row,
+        paciente: Array.isArray(row.paciente) ? row.paciente[0] : row.paciente
+      }))
+      setAgendaDia(formatted)
     } catch (err) {
       console.error('Erro ao carregar agenda do dia:', err)
     }

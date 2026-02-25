@@ -64,7 +64,12 @@ export function ProntuarioPage() {
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      setAgendaHoje((data || []) as AgendaItem[])
+      const rows = (data || []) as any[]
+      const formatted: AgendaItem[] = rows.map(row => ({
+        ...row,
+        paciente: Array.isArray(row.paciente) ? row.paciente[0] : row.paciente
+      }))
+      setAgendaHoje(formatted)
     } catch (err) {
       console.error('Erro ao carregar agenda do dia:', err)
       setMessage({ type: 'error', text: 'Erro ao carregar a agenda do dia.' })
