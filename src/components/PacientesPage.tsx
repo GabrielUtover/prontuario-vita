@@ -685,8 +685,7 @@ export function PacientesPage() {
                   <span className="col-status">Status</span>
                   <span className="col-cadastro">Cadastro</span>
                 </div>
-                {                    filteredPacientes.map((paciente, index) => {
-                      const isLastRows = index >= filteredPacientes.length - 4
+                {                    filteredPacientes.map((paciente) => {
                       return (
                       <div key={paciente.id} className="table-row table-row-with-dropdown">
                         <div
