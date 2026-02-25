@@ -17,15 +17,28 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
+.chat-fab.has-unread {
+  background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+  box-shadow: 0 10px 30px rgba(185, 28, 28, 0.55);
+  animation: chat-fab-pulse 0.9s ease-in-out infinite;
+}
+
 .chat-fab-unread-dot {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 12px;
+  min-width: 16px;
   height: 12px;
   border-radius: 999px;
   background: #ef4444;
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.35);
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .chat-fab:hover {
@@ -186,6 +199,10 @@
   color: var(--color-text);
 }
 
+.chat-fab-user-btn.has-unread .chat-fab-user-info .name {
+  font-weight: 700;
+}
+
 .chat-fab-user-info .role {
   font-size: 11px;
   color: var(--color-text-secondary);
@@ -307,6 +324,38 @@
   text-align: right;
 }
 
+.chat-fab-message .bubble .chat-fab-message-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+
+.chat-fab-message .bubble .chat-fab-message-actions .action-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--color-text-secondary);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.chat-fab-message .bubble .chat-fab-message-actions .action-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--color-text);
+}
+
+.chat-fab-message .bubble .chat-fab-message-actions .alert-btn.active {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.chat-fab-message .bubble.alert {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.45);
+}
+
 .chat-fab-input {
   border-top: 1px solid var(--color-border-light);
   padding: 6px 8px;
@@ -376,6 +425,24 @@
 .chat-fab-toast span {
   font-size: 12px;
   color: #e5e7eb;
+}
+
+@keyframes chat-fab-pulse {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  40% {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  70% {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes chat-fab-toast-in {

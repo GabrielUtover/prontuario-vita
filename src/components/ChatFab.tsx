@@ -16,6 +16,7 @@ interface ChatMessage {
   para_usuario_id: string
   mensagem: string
   created_at: string
+  lida: boolean
 }
 
 const getDisplayName = (fullName: string) => {
@@ -55,26 +56,57 @@ const getUserRoleLabel = (user: ChatUser) => {
   }
 }
 
-const playNotificationSound = () => {
+let sharedChatAudioContext: AudioContext | null = null
+
+const getChatAudioContext = () => {
   try {
     const AudioContext =
       (window as any).AudioContext || (window as any).webkitAudioContext
-    if (!AudioContext) return
+    if (!AudioContext) return null
 
-    const ctx = new AudioContext()
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
+    if (!sharedChatAudioContext) {
+      sharedChatAudioContext = new AudioContext()
+    }
 
-    oscillator.type = 'triangle'
-    oscillator.frequency.value = 880
-    gainNode.gain.value = 0.08
+    return sharedChatAudioContext
+  } catch {
+    return null
+  }
+}
 
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
+const playNotificationSound = () => {
+  try {
+    const ctx = getChatAudioContext()
+    if (!ctx) return
 
-    const now = ctx.currentTime
-    oscillator.start(now)
-    oscillator.stop(now + 0.18)
+    const play = () => {
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+
+      oscillator.type = 'triangle'
+      oscillator.frequency.value = 880
+      gainNode.gain.value = 0.08
+
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+
+      const now = ctx.currentTime
+      oscillator.start(now)
+      oscillator.stop(now + 0.18)
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx
+        .resume()
+        .then(() => {
+          play()
+        })
+        .catch(() => {
+          // Ignora falhas ao retomar contexto de áudio
+        })
+    } else {
+      play()
+    }
   } catch (err) {
     console.error('Erro ao tocar som de notificação do chat:', err)
   }
@@ -90,14 +122,17 @@ export function ChatFab() {
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [unreadByUserId, setUnreadByUserId] = useState<Record<string, number>>({})
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toastInfo, setToastInfo] = useState<{ fromUserId: string; text: string } | null>(null)
+  const [alertedMessageIds, setAlertedMessageIds] = useState<Record<string, boolean>>({})
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
+  const originalTitleRef = useRef<string | null>(null)
 
   const currentUserId = usuario?.id
 
   const canUseChat = !!currentUserId
 
-  const hasUnread = Object.keys(unreadByUserId).length > 0
+  const totalUnread = Object.values(unreadByUserId).reduce((acc, n) => acc + n, 0)
+  const hasUnread = totalUnread > 0
 
   const selectedUser = useMemo(
     () => users.find(u => u.id === selectedUserId) ?? null,
@@ -105,26 +140,45 @@ export function ChatFab() {
   )
 
   useEffect(() => {
-    if (!open) return
+    if (typeof document === 'undefined') return
 
-    if (typeof window === 'undefined' || typeof Notification === 'undefined') return
+    const totalUnread = Object.values(unreadByUserId).reduce((acc, n) => acc + n, 0)
 
-    if (Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => undefined)
+    if (originalTitleRef.current === null) {
+      originalTitleRef.current = document.title
     }
-  }, [open])
+
+    if (totalUnread > 0) {
+      const base = originalTitleRef.current ?? document.title
+      document.title = `(${totalUnread}) ${base}`
+    } else if (originalTitleRef.current) {
+      document.title = originalTitleRef.current
+    }
+
+    return () => {
+      if (originalTitleRef.current) {
+        document.title = originalTitleRef.current
+      }
+    }
+  }, [unreadByUserId])
 
   useEffect(() => {
-    if (!toastMessage) return
+    if (!toastInfo) return
 
     const timeoutId = window.setTimeout(() => {
-      setToastMessage(null)
+      setToastInfo(null)
     }, 10000)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [toastMessage])
+  }, [toastInfo])
+
+  const getUserNameById = (id: string | null | undefined) => {
+    if (!id) return 'Contato'
+    const user = users.find(u => u.id === id)
+    return user ? getDisplayName(user.nome) : 'Contato'
+  }
 
   useEffect(() => {
     if (!canUseChat || !open || !currentUserId) return
@@ -159,7 +213,7 @@ export function ChatFab() {
       try {
         const { data, error } = await supabase
           .from('chat_mensagens')
-          .select('id, de_usuario_id, para_usuario_id, mensagem, created_at')
+          .select('id, de_usuario_id, para_usuario_id, mensagem, created_at, lida')
           .or(
             `and(de_usuario_id.eq.${currentUserId},para_usuario_id.eq.${selectedUserId}),and(de_usuario_id.eq.${selectedUserId},para_usuario_id.eq.${currentUserId})`
           )
@@ -175,6 +229,53 @@ export function ChatFab() {
 
     loadMessages()
   }, [canUseChat, open, selectedUserId, currentUserId])
+
+  useEffect(() => {
+    if (!canUseChat || !currentUserId) return
+
+    let cancelled = false
+
+    const loadUnreadCounts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('chat_mensagens')
+          .select('de_usuario_id')
+          .eq('para_usuario_id', currentUserId)
+          .eq('lida', false)
+
+        if (error) throw error
+        if (!data || cancelled) return
+
+        const counts: Record<string, number> = {}
+        ;(data as { de_usuario_id: string }[]).forEach(row => {
+          const from = row.de_usuario_id
+          counts[from] = (counts[from] ?? 0) + 1
+        })
+
+        setUnreadByUserId(counts)
+      } catch (err) {
+        console.error('Erro ao carregar mensagens não lidas:', err)
+      }
+    }
+
+    loadUnreadCounts()
+
+    const intervalId =
+      typeof window !== 'undefined'
+        ? window.setInterval(() => {
+            if (!cancelled) {
+              loadUnreadCounts()
+            }
+          }, 5000)
+        : null
+
+    return () => {
+      cancelled = true
+      if (intervalId !== null && typeof window !== 'undefined') {
+        window.clearInterval(intervalId)
+      }
+    }
+  }, [canUseChat, currentUserId])
 
   useEffect(() => {
     if (!open) return
@@ -204,7 +305,10 @@ export function ChatFab() {
 
           if (isToCurrentUser && !isFromCurrentUser) {
             playNotificationSound()
-            setToastMessage(newMsg.mensagem)
+            setToastInfo({
+              fromUserId: newMsg.de_usuario_id,
+              text: newMsg.mensagem,
+            })
 
             const isCurrentConversation =
               selectedUserId &&
@@ -224,19 +328,6 @@ export function ChatFab() {
                 const current = prev[fromId] ?? 0
                 return { ...prev, [fromId]: current + 1 }
               })
-            }
-
-            if (typeof window !== 'undefined' && typeof Notification !== 'undefined') {
-              if (Notification.permission === 'granted') {
-                try {
-                  // eslint-disable-next-line no-new
-                  new Notification('Nova mensagem no chat', {
-                    body: newMsg.mensagem,
-                  })
-                } catch {
-                  // Ignora falhas ao disparar notificação
-                }
-              }
             }
           }
 
@@ -276,7 +367,7 @@ export function ChatFab() {
           para_usuario_id: selectedUserId,
           mensagem: text,
         })
-        .select('id, de_usuario_id, para_usuario_id, mensagem, created_at')
+        .select('id, de_usuario_id, para_usuario_id, mensagem, created_at, lida')
         .single()
 
       if (error) throw error
@@ -292,31 +383,93 @@ export function ChatFab() {
     }
   }
 
+  const handleToggleAlertMessage = (messageId: string) => {
+    setAlertedMessageIds(prev => ({
+      ...prev,
+      [messageId]: !prev[messageId],
+    }))
+    playNotificationSound()
+  }
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm('Deseja apagar esta mensagem do chat?')
+      if (!confirmed) return
+    }
+
+    try {
+      const { error } = await supabase.from('chat_mensagens').delete().eq('id', messageId)
+      if (error) throw error
+      setMessages(prev => prev.filter(msg => msg.id !== messageId))
+      setAlertedMessageIds(prev => {
+        const { [messageId]: _removed, ...rest } = prev
+        return rest
+      })
+    } catch (err) {
+      console.error('Erro ao apagar mensagem de chat:', err)
+    }
+  }
+
+  const handleSelectUser = async (userId: string) => {
+    setSelectedUserId(userId)
+    setUnreadByUserId(prev => {
+      const { [userId]: _removed, ...rest } = prev
+      return rest
+    })
+
+    if (!currentUserId) return
+
+    try {
+      const { error } = await supabase
+        .from('chat_mensagens')
+        .update({ lida: true })
+        .eq('de_usuario_id', userId)
+        .eq('para_usuario_id', currentUserId)
+        .eq('lida', false)
+
+      if (error) throw error
+
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.de_usuario_id === userId && msg.para_usuario_id === currentUserId
+            ? { ...msg, lida: true }
+            : msg
+        )
+      )
+    } catch (err) {
+      console.error('Erro ao marcar mensagens como lidas:', err)
+    }
+  }
+
   if (!canUseChat) return null
 
   return (
     <>
       <button
         type="button"
-        className="chat-fab"
+        className={`chat-fab ${hasUnread ? 'has-unread' : ''}`}
         onClick={() => setOpen(v => !v)}
         aria-label={hasUnread ? 'Chat interno - novas mensagens' : 'Chat interno'}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
         </svg>
-        {hasUnread && <span className="chat-fab-unread-dot" aria-hidden="true" />}
+        {hasUnread && (
+          <span className="chat-fab-unread-dot" aria-hidden="true">
+            {totalUnread > 9 ? '9+' : totalUnread}
+          </span>
+        )}
       </button>
 
-      {toastMessage && (
+      {toastInfo && (
         <div
           className="chat-fab-toast"
           role="status"
           aria-live="polite"
-          onClick={() => setToastMessage(null)}
+          onClick={() => setToastInfo(null)}
         >
-          <strong>Nova mensagem no chat</strong>
-          <span>{toastMessage}</span>
+          <strong>Nova mensagem de {getUserNameById(toastInfo.fromUserId)}</strong>
+          <span>{toastInfo.text}</span>
         </div>
       )}
 
@@ -365,13 +518,11 @@ export function ChatFab() {
                         <li key={u.id}>
                           <button
                             type="button"
-                            className={`chat-fab-user-btn ${selectedUserId === u.id ? 'active' : ''}`}
+                            className={`chat-fab-user-btn ${selectedUserId === u.id ? 'active' : ''} ${
+                              unreadCount > 0 ? 'has-unread' : ''
+                            }`}
                             onClick={() => {
-                              setSelectedUserId(u.id)
-                              setUnreadByUserId(prev => {
-                                const { [u.id]: _removed, ...rest } = prev
-                                return rest
-                              })
+                              handleSelectUser(u.id)
                             }}
                           >
                             <div className="chat-fab-user-avatar">
@@ -428,7 +579,7 @@ export function ChatFab() {
                                 </div>
                               )}
                               <div className={`chat-fab-message ${isMine ? 'mine' : 'theirs'}`}>
-                                <div className="bubble">
+                                <div className={`bubble ${alertedMessageIds[msg.id] ? 'alert' : ''}`}>
                                   <p>{msg.mensagem}</p>
                                   <span className="time">
                                     {messageDate.toLocaleTimeString('pt-BR', {
@@ -436,6 +587,22 @@ export function ChatFab() {
                                       minute: '2-digit',
                                     })}
                                   </span>
+                                  <div className="chat-fab-message-actions">
+                                    <button
+                                      type="button"
+                                      className={`action-btn alert-btn ${alertedMessageIds[msg.id] ? 'active' : ''}`}
+                                      onClick={() => handleToggleAlertMessage(msg.id)}
+                                    >
+                                      Alerta
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="action-btn delete-btn"
+                                      onClick={() => handleDeleteMessage(msg.id)}
+                                    >
+                                      Apagar
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </Fragment>
