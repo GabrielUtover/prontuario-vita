@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import './ChatFab.css'
@@ -89,15 +89,42 @@ export function ChatFab() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [unreadByUserId, setUnreadByUserId] = useState<Record<string, number>>({})
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null)
 
   const currentUserId = usuario?.id
 
   const canUseChat = !!currentUserId
 
+  const hasUnread = Object.keys(unreadByUserId).length > 0
+
   const selectedUser = useMemo(
     () => users.find(u => u.id === selectedUserId) ?? null,
     [users, selectedUserId]
   )
+
+  useEffect(() => {
+    if (!open) return
+
+    if (typeof window === 'undefined' || typeof Notification === 'undefined') return
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => undefined)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!toastMessage) return
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage(null)
+    }, 10000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [toastMessage])
 
   useEffect(() => {
     if (!canUseChat || !open || !currentUserId) return
@@ -150,6 +177,14 @@ export function ChatFab() {
   }, [canUseChat, open, selectedUserId, currentUserId])
 
   useEffect(() => {
+    if (!open) return
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    container.scrollTop = container.scrollHeight
+  }, [messages.length, selectedUserId, open])
+
+  useEffect(() => {
     if (!canUseChat || !currentUserId) return
 
     const channel = supabase
@@ -169,6 +204,40 @@ export function ChatFab() {
 
           if (isToCurrentUser && !isFromCurrentUser) {
             playNotificationSound()
+            setToastMessage(newMsg.mensagem)
+
+            const isCurrentConversation =
+              selectedUserId &&
+              ((newMsg.de_usuario_id === currentUserId &&
+                newMsg.para_usuario_id === selectedUserId) ||
+                (newMsg.de_usuario_id === selectedUserId &&
+                  newMsg.para_usuario_id === currentUserId))
+
+            const canMarkAsUnread =
+              !isCurrentConversation ||
+              !open ||
+              (typeof document !== 'undefined' && !document.hasFocus())
+
+            if (canMarkAsUnread) {
+              setUnreadByUserId(prev => {
+                const fromId = newMsg.de_usuario_id
+                const current = prev[fromId] ?? 0
+                return { ...prev, [fromId]: current + 1 }
+              })
+            }
+
+            if (typeof window !== 'undefined' && typeof Notification !== 'undefined') {
+              if (Notification.permission === 'granted') {
+                try {
+                  // eslint-disable-next-line no-new
+                  new Notification('Nova mensagem no chat', {
+                    body: newMsg.mensagem,
+                  })
+                } catch {
+                  // Ignora falhas ao disparar notificação
+                }
+              }
+            }
           }
 
           if (!selectedUserId) return
@@ -231,12 +300,25 @@ export function ChatFab() {
         type="button"
         className="chat-fab"
         onClick={() => setOpen(v => !v)}
-        aria-label="Chat entre recepção e profissional"
+        aria-label={hasUnread ? 'Chat interno - novas mensagens' : 'Chat interno'}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
         </svg>
+        {hasUnread && <span className="chat-fab-unread-dot" aria-hidden="true" />}
       </button>
+
+      {toastMessage && (
+        <div
+          className="chat-fab-toast"
+          role="status"
+          aria-live="polite"
+          onClick={() => setToastMessage(null)}
+        >
+          <strong>Nova mensagem no chat</strong>
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       {open && (
         <div
@@ -276,23 +358,38 @@ export function ChatFab() {
                   <div className="chat-fab-users-empty">Nenhum contato disponível.</div>
                 ) : (
                   <ul>
-                    {users.map(u => (
-                      <li key={u.id}>
-                        <button
-                          type="button"
-                          className={`chat-fab-user-btn ${selectedUserId === u.id ? 'active' : ''}`}
-                          onClick={() => setSelectedUserId(u.id)}
-                        >
-                          <div className="chat-fab-user-avatar">
-                            {u.nome.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="chat-fab-user-info">
-                            <span className="name">{getDisplayName(u.nome)}</span>
-                            <span className="role">{getUserRoleLabel(u)}</span>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
+                    {users.map(u => {
+                      const unreadCount = unreadByUserId[u.id] ?? 0
+
+                      return (
+                        <li key={u.id}>
+                          <button
+                            type="button"
+                            className={`chat-fab-user-btn ${selectedUserId === u.id ? 'active' : ''}`}
+                            onClick={() => {
+                              setSelectedUserId(u.id)
+                              setUnreadByUserId(prev => {
+                                const { [u.id]: _removed, ...rest } = prev
+                                return rest
+                              })
+                            }}
+                          >
+                            <div className="chat-fab-user-avatar">
+                              {u.nome.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="chat-fab-user-info">
+                              <span className="name">{getDisplayName(u.nome)}</span>
+                              <span className="role">{getUserRoleLabel(u)}</span>
+                            </div>
+                            {unreadCount > 0 && (
+                              <span className="chat-fab-user-unread-badge">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </div>
@@ -309,7 +406,7 @@ export function ChatFab() {
                         <span className="role">{getUserRoleLabel(selectedUser)}</span>
                       </div>
                     </div>
-                    <div className="chat-fab-messages">
+                    <div className="chat-fab-messages" ref={messagesContainerRef}>
                       {messages.length === 0 ? (
                         <div className="chat-fab-messages-empty">
                           Comece uma nova conversa com {getDisplayName(selectedUser.nome)}.
