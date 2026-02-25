@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { AppSidebar } from './AppSidebar'
+import { ChatFab } from './ChatFab'
 import './AppLayout.css'
 
 const STORAGE_KEY = 'app-sidebar-minimized'
@@ -27,6 +28,7 @@ export function AppLayout() {
       <AppSidebar minimized={minimized} onToggleMinimize={() => setMinimized((v) => !v)} />
       <main className="app-layout-main">
         <Outlet />
+        <ChatFab />
       </main>
     </div>
   )
