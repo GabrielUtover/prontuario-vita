@@ -1,0 +1,928 @@
+/**
+ * CKEditorDocument - Estilos CSS
+ * Layout A4 para impressão e edição de documentos
+ */
+
+/* ===================================
+   VARIÁVEIS CSS
+   =================================== */
+:root {
+  --ck-color-primary: #4a7c23;
+  --ck-color-primary-dark: #2d5016;
+  --ck-border-color: #d1d5db;
+  --ck-sidebar-width: 280px;
+  --ck-page-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================
+   LAYOUT PRINCIPAL
+   =================================== */
+.ckeditor-layout {
+  display: flex;
+  height: calc(100vh - 60px);
+  background: #f0f2f5;
+  overflow: visible;
+}
+
+/* ===================================
+   SIDEBARS
+   =================================== */
+.ckeditor-sidebar {
+  width: var(--ck-sidebar-width);
+  background: white;
+  border: 1px solid var(--ck-border-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: width 0.3s ease, margin 0.3s ease;
+  z-index: 10;
+}
+
+.ckeditor-sidebar.left {
+  border-right: 1px solid var(--ck-border-color);
+}
+
+.ckeditor-sidebar.right {
+  border-left: 1px solid var(--ck-border-color);
+}
+
+.ckeditor-sidebar.closed {
+  width: 40px;
+}
+
+.ckeditor-sidebar.closed .sidebar-content {
+  display: none;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background: white;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #666;
+  z-index: 20;
+  transition: all 0.2s;
+}
+
+.ckeditor-sidebar.left .sidebar-toggle {
+  right: -12px;
+}
+
+.ckeditor-sidebar.right .sidebar-toggle {
+  left: -12px;
+}
+
+.sidebar-toggle:hover {
+  background: var(--ck-color-primary);
+  color: white;
+  border-color: var(--ck-color-primary);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.sidebar-section {
+  margin-bottom: 24px;
+}
+
+.sidebar-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ck-color-primary-dark);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===================================
+   CAMPOS DE FORMULÁRIO
+   =================================== */
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--ck-color-primary);
+  box-shadow: 0 0 0 3px rgba(74, 124, 35, 0.1);
+}
+
+/* ===================================
+   BOTÕES DE ORIENTAÇÃO
+   =================================== */
+.orientation-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.orientation-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: #f9fafb;
+  border: 2px solid var(--ck-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.orientation-btn:hover {
+  border-color: var(--ck-color-primary);
+  background: #f0fdf4;
+}
+
+.orientation-btn.active {
+  border-color: var(--ck-color-primary);
+  background: #dcfce7;
+}
+
+.orientation-btn span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.orientation-btn.active span {
+  color: var(--ck-color-primary-dark);
+}
+
+/* ===================================
+   VARIÁVEIS
+   =================================== */
+.variables-container {
+  position: relative;
+}
+
+.variables-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.variables-toggle-btn:hover {
+  background: #f0fdf4;
+  border-color: var(--ck-color-primary);
+}
+
+.variables-list {
+  margin-top: 8px;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.variable-group {
+  border-bottom: 1px solid var(--ck-border-color);
+}
+
+.variable-group:last-child {
+  border-bottom: none;
+}
+
+.variable-group-title {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f9fafb;
+}
+
+.variable-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.variable-item:hover {
+  background: #f0fdf4;
+}
+
+.variable-label {
+  font-size: 13px;
+  color: #374151;
+}
+
+.variable-key {
+  font-size: 10px;
+  color: var(--ck-color-primary-dark);
+  background: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+/* ===================================
+   BOTÕES DE AÇÃO
+   =================================== */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn.save {
+  background: var(--ck-color-primary);
+  color: white;
+}
+
+.action-btn.save:hover {
+  background: var(--ck-color-primary-dark);
+}
+
+.action-btn.export {
+  background: #1e40af;
+  color: white;
+}
+
+.action-btn.export:hover {
+  background: #1e3a8a;
+}
+
+.save-message {
+  margin-top: 12px;
+  padding: 10px;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ck-color-primary-dark);
+  text-align: center;
+}
+
+/* ===================================
+   ÁREA PRINCIPAL (EDITOR)
+   =================================== */
+.ckeditor-main {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* ===================================
+   RIBBON - BARRA DE ABAS DE FERRAMENTAS
+   =================================== */
+.ribbon-container {
+  background: white;
+  border-bottom: 1px solid var(--ck-border-color);
+  flex-shrink: 0;
+}
+
+.ribbon-tabs {
+  display: flex;
+  gap: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--ck-border-color);
+  padding: 0 16px;
+}
+
+.ribbon-tab {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: -1px;
+}
+
+.ribbon-tab:hover {
+  color: var(--ck-color-primary);
+  background: #f0fdf4;
+}
+
+.ribbon-tab.active {
+  color: var(--ck-color-primary-dark);
+  background: white;
+  border-bottom-color: var(--ck-color-primary);
+}
+
+.ribbon-content {
+  padding: 8px 16px;
+  background: white;
+}
+
+.ribbon-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 80px;
+}
+
+.ribbon-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 12px;
+  min-width: 60px;
+}
+
+.ribbon-group-title {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ribbon-divider {
+  width: 1px;
+  height: 70px;
+  background: #e5e7eb;
+  margin: 0 4px;
+  align-self: center;
+}
+
+.ribbon-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ribbon-buttons.row {
+  flex-direction: row;
+}
+
+.ribbon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #374151;
+  transition: all 0.15s;
+  min-width: 50px;
+}
+
+.ribbon-btn:hover {
+  background: #f0fdf4;
+  border-color: var(--ck-color-primary);
+}
+
+.ribbon-btn.active {
+  background: #dcfce7;
+  border-color: var(--ck-color-primary);
+  color: var(--ck-color-primary-dark);
+}
+
+.ribbon-btn.large {
+  padding: 12px 16px;
+  min-width: 70px;
+}
+
+.ribbon-btn.large svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ribbon-btn.icon-only {
+  padding: 8px;
+  min-width: 36px;
+  flex-direction: row;
+}
+
+.ribbon-btn.icon-only span {
+  display: none;
+}
+
+.ribbon-btn.danger {
+  color: #dc2626;
+}
+
+.ribbon-btn.danger:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.ribbon-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.ribbon-btn span {
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Dropdown no Ribbon */
+.ribbon-dropdown {
+  position: relative;
+}
+
+.ribbon-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: white;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-group {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdown-group:last-child {
+  border-bottom: none;
+}
+
+.dropdown-group-title {
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  background: #f9fafb;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dropdown-item:hover {
+  background: #f0fdf4;
+}
+
+/* Input no Ribbon */
+.ribbon-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ribbon-input-group label {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.ribbon-input {
+  padding: 6px 10px;
+  border: 1px solid var(--ck-border-color);
+  border-radius: 4px;
+  font-size: 13px;
+  width: 180px;
+  transition: border-color 0.2s;
+}
+
+.ribbon-input:focus {
+  outline: none;
+  border-color: var(--ck-color-primary);
+}
+
+.page-preview-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px;
+  flex: 1;
+  overflow: auto;
+  background: #f0f2f5;
+  min-width: 0; /* Permite encolher em flexbox */
+}
+
+/* ===================================
+   PÁGINA A4
+   =================================== */
+.document-page {
+  background: white;
+  box-shadow: var(--ck-page-shadow);
+  margin: 0 auto;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-page.portrait {
+  width: 210mm;
+  min-height: 297mm;
+}
+
+.document-page.landscape {
+  width: 297mm;
+  min-height: 210mm;
+}
+
+/* ===================================
+   ESTILOS DO CKEDITOR
+   =================================== */
+.document-page .ck-editor {
+  border: none !important;
+  height: 100%;
+  width: 100%;
+}
+
+.document-page .ck.ck-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+}
+
+.document-page .ck.ck-editor__main {
+  flex: 1;
+  overflow: visible;
+  width: 100%;
+}
+
+.document-page .ck-editor__top {
+  border-bottom: 1px solid var(--ck-border-color) !important;
+  background: #fafafa !important;
+}
+
+.document-page .ck-toolbar {
+  border: none !important;
+  background: transparent !important;
+}
+
+.document-page .ck-editor__editable {
+  border: none !important;
+  padding: 20mm !important;
+  min-height: 257mm; /* 297mm - 40mm padding */
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.6;
+  cursor: text;
+}
+
+.document-page .ck-editor__editable.ck-focused {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.document-page.landscape .ck-editor__editable {
+  min-height: 170mm; /* 210mm - 40mm padding */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Garantir interatividade no modo landscape */
+.document-page.landscape {
+  flex-shrink: 0;
+}
+
+.document-page.landscape .ck.ck-editor {
+  width: 100%;
+  height: 100%;
+}
+
+.document-page.landscape .ck.ck-editor__main {
+  width: 100%;
+}
+
+.document-page .ck-editor__editable:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ===================================
+   ESTILOS DE TABELA NO EDITOR
+   =================================== */
+.document-page .ck-editor__editable table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.document-page .ck-editor__editable table td,
+.document-page .ck-editor__editable table th {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.document-page .ck-editor__editable table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Seleção de células */
+.document-page .ck-editor__editable .ck-table-column-resizer {
+  background: var(--ck-color-primary);
+}
+
+/* ===================================
+   ESTILOS DE IMAGEM NO EDITOR
+   =================================== */
+.document-page .ck-editor__editable figure.image {
+  margin: 1em 0;
+}
+
+.document-page .ck-editor__editable figure.image img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===================================
+   SIDEBAR DIREITA - DICAS
+   =================================== */
+.tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tips-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.tips-list li:last-child {
+  border-bottom: none;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.shortcut kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  color: #374151;
+}
+
+.shortcut span {
+  color: #6b7280;
+  margin-left: auto;
+}
+
+.info-text {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.info-text code {
+  background: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--ck-color-primary-dark);
+}
+
+/* ===================================
+   ESTILOS PARA IMPRESSÃO (PDF)
+   =================================== */
+@media print {
+  .ckeditor-layout {
+    display: block;
+    height: auto;
+    background: white;
+  }
+
+  .ckeditor-sidebar {
+    display: none !important;
+  }
+
+  .ckeditor-main {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .document-page {
+    box-shadow: none;
+    margin: 0;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+
+  .document-page .ck-editor__top {
+    display: none !important;
+  }
+
+  .document-page .ck-editor__editable {
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  /* Garantir quebra de página adequada */
+  .document-page table {
+    page-break-inside: avoid;
+  }
+
+  .document-page tr {
+    page-break-inside: avoid;
+  }
+
+  .document-page img {
+    page-break-inside: avoid;
+  }
+}
+
+/* ===================================
+   ESTILOS PARA EXPORTAÇÃO PDF
+   =================================== */
+.pdf-export-content {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.6;
+  color: #000;
+}
+
+.pdf-export-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.pdf-export-content table td,
+.pdf-export-content table th {
+  border: 1px solid #000;
+  padding: 8px 12px;
+}
+
+.pdf-export-content table th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+.pdf-export-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.pdf-export-content h1 {
+  font-size: 24pt;
+  margin: 0 0 12pt;
+}
+
+.pdf-export-content h2 {
+  font-size: 18pt;
+  margin: 12pt 0 8pt;
+}
+
+.pdf-export-content h3 {
+  font-size: 14pt;
+  margin: 10pt 0 6pt;
+}
+
+.pdf-export-content p {
+  margin: 0 0 12pt;
+}
+
+/* ===================================
+   RESPONSIVIDADE
+   =================================== */
+@media (max-width: 1200px) {
+  .ckeditor-sidebar {
+    width: 240px;
+  }
+  
+  .ckeditor-sidebar.closed {
+    width: 0;
+    border: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .ckeditor-layout {
+    flex-direction: column;
+  }
+  
+  .ckeditor-sidebar {
+    width: 100%;
+    max-height: 200px;
+  }
+  
+  .ckeditor-sidebar.left {
+    order: 1;
+  }
+  
+  .ckeditor-main {
+    order: 2;
+  }
+  
+  .ckeditor-sidebar.right {
+    order: 3;
+    display: none;
+  }
+  
+  .document-page.portrait,
+  .document-page.landscape {
+    width: 100% !important;
+    min-width: 100% !important;
+    min-height: auto;
+  }
+  
+  .sidebar-toggle {
+    display: none;
+  }
+}

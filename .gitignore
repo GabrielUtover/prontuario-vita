@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Build files
+build/
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Scripts temporários de manutenção
+*.bat
+fix_*.sql
+*_TEMPORARIO.sql
+*_TEMPORARIO*.sql
+diagnostico_*.sql
+SOLUCAO_*.sql
+
+# Vercel
+.vercel
+
+# Database scripts temporários (manter apenas scripts de migração oficiais)
+# Scripts de correção temporária devem ser removidos após uso

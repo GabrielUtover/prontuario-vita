@@ -1,0 +1,1429 @@
+/* ===================================
+   PRONTUÁRIO PACIENTE - Anamnese + Timeline
+   =================================== */
+
+.prontuario-paciente-page {
+  height: 100vh;
+  min-height: 100vh;
+  background: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.prontuario-paciente-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 24px;
+  color: var(--color-text-secondary);
+}
+
+.prontuario-paciente-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-green);
+  border-radius: 50%;
+  animation: prontuario-spin 0.8s linear infinite;
+}
+
+@keyframes prontuario-spin {
+  to { transform: rotate(360deg); }
+}
+
+.prontuario-paciente-loading p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.prontuario-paciente-erro {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.prontuario-paciente-erro-icon {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.prontuario-paciente-erro p {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.prontuario-paciente-erro-inline {
+  justify-content: center;
+  padding: 24px;
+}
+
+.prontuario-paciente-btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-green);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.prontuario-paciente-btn-link:hover {
+  color: var(--color-green-dark);
+  text-decoration: underline;
+}
+
+/* Header */
+.prontuario-paciente-header {
+  background: #2E8E60;
+  color: white;
+  padding: 16px 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.prontuario-paciente-breadcrumb {
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.prontuario-paciente-breadcrumb-link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.prontuario-paciente-breadcrumb-link:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.prontuario-paciente-breadcrumb-sep {
+  margin: 0 6px;
+  opacity: 0.7;
+}
+
+.prontuario-paciente-breadcrumb-current {
+  color: white;
+  font-weight: 600;
+}
+
+.prontuario-paciente-header-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+
+.prontuario-paciente-header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.prontuario-paciente-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prontuario-paciente-nome {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.prontuario-paciente-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.prontuario-paciente-meta span {
+  white-space: nowrap;
+}
+
+.prontuario-paciente-header-contexto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.prontuario-paciente-header-date {
+  font-weight: 500;
+}
+
+.prontuario-paciente-header-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.prontuario-paciente-header-user-nome {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+}
+
+.prontuario-paciente-header-user-crm {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* Toast de feedback */
+.prontuario-paciente-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1100;
+  animation: prontuario-paciente-toast-in 0.3s ease;
+}
+
+@keyframes prontuario-paciente-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.prontuario-paciente-toast-icon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.prontuario-paciente-toast-success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.prontuario-paciente-toast-success .prontuario-paciente-toast-icon {
+  color: #059669;
+}
+
+.prontuario-paciente-toast-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.prontuario-paciente-toast-error .prontuario-paciente-toast-icon {
+  color: #dc2626;
+}
+
+.prontuario-paciente-toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Layout - sem scroll na página; scroll só no histórico */
+.prontuario-paciente-layout {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Timeline (esquerda) - header fixo + área com scroll */
+.prontuario-paciente-timeline {
+  width: 420px;
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.prontuario-paciente-timeline-header {
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.prontuario-paciente-timeline-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prontuario-paciente-timeline-title svg {
+  color: var(--color-green);
+  flex-shrink: 0;
+}
+
+.prontuario-paciente-timeline-filtro-wrap {
+  position: relative;
+}
+
+.prontuario-paciente-btn-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.prontuario-paciente-btn-filtro:hover {
+  background: #f8fafc;
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+.prontuario-paciente-btn-filtro.active {
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+  background: var(--color-sage);
+}
+
+.prontuario-paciente-filtro-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-green);
+  margin-left: 4px;
+}
+
+.prontuario-paciente-filtro-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.prontuario-paciente-filtro-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 14px;
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prontuario-paciente-filtro-campo label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.prontuario-paciente-filtro-campo input,
+.prontuario-paciente-filtro-campo select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+  background: white;
+}
+
+.prontuario-paciente-filtro-campo input:focus,
+.prontuario-paciente-filtro-campo select:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 2px rgba(46, 142, 96, 0.15);
+}
+
+.prontuario-paciente-filtro-limpar {
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-paciente-filtro-limpar:hover {
+  background: #e2e8f0;
+  color: var(--color-text);
+}
+
+.prontuario-paciente-timeline-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 20px;
+}
+
+.prontuario-paciente-timeline-empty {
+  padding: 32px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.prontuario-paciente-timeline-empty-icon {
+  color: var(--color-border);
+}
+
+.prontuario-paciente-timeline-empty p {
+  margin: 0;
+}
+
+.prontuario-paciente-timeline-empty-hint {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.prontuario-paciente-timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prontuario-paciente-timeline-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.prontuario-paciente-timeline-card:hover {
+  border-color: var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.timeline-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.timeline-card-type-icon {
+  display: flex;
+  color: var(--color-text-secondary);
+}
+
+.prontuario-paciente-timeline-card-receita .timeline-card-type-icon {
+  color: var(--color-green);
+}
+
+.prontuario-paciente-timeline-card-anamnese .timeline-card-type-icon {
+  color: #3b82f6;
+}
+
+.timeline-card-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.timeline-card-titulo {
+  display: block;
+  font-size: 13px;
+  color: var(--color-green-dark);
+  margin: 0 0 6px;
+}
+
+.prontuario-paciente-timeline-card-anamnese .timeline-card-titulo {
+  color: #2563eb;
+}
+
+.timeline-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.timeline-card-evolucao-id {
+  font-family: ui-monospace, monospace;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.timeline-card-profissional {
+  font-weight: 500;
+}
+
+.timeline-card-badge-cancelada {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.timeline-card-motivo-cancelamento {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.prontuario-paciente-timeline-card.timeline-card-cancelada {
+  opacity: 0.85;
+  background: #fafafa;
+}
+
+.prontuario-paciente-filtro-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.prontuario-paciente-filtro-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  margin: 0;
+}
+
+.timeline-card-conteudo {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.timeline-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.timeline-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-card-btn:hover {
+  background: #e2e8f0;
+  color: var(--color-text);
+}
+
+.timeline-card-btn-cancelar:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Modal Cancelar anamnese */
+.modal-cancelar-anamnese-body {
+  padding: 24px;
+}
+
+.modal-cancelar-anamnese .modal-cancelar-desc {
+  margin: 20px 0 16px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.modal-cancelar-anamnese .modal-cancelar-motivo {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 24px;
+}
+
+.modal-cancelar-anamnese .prontuario-paciente-anamnese-actions {
+  margin-top: 8px;
+  padding-top: 20px;
+}
+
+.modal-cancelar-anamnese .modal-cancelar-motivo:focus {
+  outline: none;
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
+}
+
+.timeline-card-btn-cancelar-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: #b91c1c;
+  border: 1px solid #b91c1c;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-card-btn-cancelar-confirm:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+
+.timeline-card-btn-cancelar-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Sidebar direita - cor distinta do cabeçalho */
+.prontuario-paciente-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: #1e4d3a;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+}
+
+.prontuario-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.prontuario-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.prontuario-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.prontuario-sidebar-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.prontuario-sidebar-item svg {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.prontuario-sidebar-item-voltar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+
+.prontuario-sidebar-item.sair {
+  color: #fecaca;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.prontuario-sidebar-item.sair:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fee2e2;
+}
+
+/* Anamnese (centro) - sem scroll próprio; conteúdo flex */
+.prontuario-paciente-anamnese {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: #f0faf4;
+  padding: 24px;
+  border-radius: 0;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.03);
+}
+
+.prontuario-anamnese-editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.prontuario-anamnese-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.prontuario-anamnese-toolbar-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-right: 12px;
+}
+
+.prontuario-anamnese-toolbar-contexto {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.prontuario-anamnese-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: #f1f5f9;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-anamnese-toolbar-btn:hover {
+  background: var(--color-sage);
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+/* Área de texto grande (contentEditable) */
+.prontuario-paciente-anamnese-editor {
+  flex: 1;
+  min-height: 420px;
+  width: 100%;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 1.65;
+  font-family: Calibri, 'Segoe UI', sans-serif;
+  outline: none;
+  overflow-y: auto;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prontuario-paciente-anamnese-editor br {
+  display: block;
+  line-height: 1.65;
+}
+
+.prontuario-paciente-anamnese-editor div {
+  display: block;
+  min-height: 1em;
+  margin: 0 0 0.25em;
+}
+
+.prontuario-paciente-anamnese-editor:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(46, 142, 96, 0.15);
+}
+
+.prontuario-paciente-anamnese-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.prontuario-anamnese-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.prontuario-anamnese-secao-titulo {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prontuario-paciente-btn-modelos {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f1f5f9;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-paciente-btn-modelos:hover {
+  background: var(--color-sage);
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+.prontuario-paciente-anamnese-textarea {
+  flex: 1;
+  min-height: 280px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.65;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prontuario-paciente-anamnese-textarea:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(46, 142, 96, 0.15);
+}
+
+.prontuario-paciente-anamnese-textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.prontuario-paciente-anamnese-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.prontuario-paciente-btn-cancelar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-paciente-btn-cancelar:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: var(--color-text);
+}
+
+.prontuario-paciente-btn-salvar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--color-green);
+  border: 1px solid var(--color-green);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(46, 142, 96, 0.2);
+}
+
+.prontuario-paciente-btn-salvar:hover:not(:disabled) {
+  background: var(--color-green-dark);
+  box-shadow: 0 4px 8px rgba(46, 142, 96, 0.25);
+}
+
+.prontuario-paciente-btn-salvar:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Modal (Modelos de Anamnese) */
+.prontuario-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.prontuario-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.prontuario-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.prontuario-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prontuario-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-modal-close:hover {
+  background: #f3f4f6;
+  color: var(--color-text);
+}
+
+.prontuario-modal-desc {
+  margin: 0;
+  padding: 12px 24px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.prontuario-modal.modelos-modal {
+  max-width: 520px;
+}
+
+.modelos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.modelo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.modelo-item:hover {
+  border-color: var(--color-green);
+  background: var(--color-sage);
+  box-shadow: 0 2px 8px rgba(58, 182, 125, 0.12);
+}
+
+.modelo-item strong {
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.modelo-item span {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.modelos-modal-actions {
+  padding: 0 20px 12px;
+}
+
+.prontuario-btn-criar-modelo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #2E8E60;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.prontuario-btn-criar-modelo:hover {
+  background: #267a52;
+}
+
+.modelo-item-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.modelo-item-wrapper .modelo-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.modelo-item-excluir {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #b91c1c;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modelo-item-excluir:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.modelo-item-excluir:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Modal Criar modelo */
+.prontuario-modal.criar-modelo-modal {
+  max-width: 560px;
+}
+
+.criar-modelo-form {
+  padding: 0 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.criar-modelo-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.criar-modelo-input {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.criar-modelo-input:focus {
+  border-color: var(--color-green);
+}
+
+.criar-modelo-texto-actions {
+  margin-top: 4px;
+}
+
+.prontuario-btn-usar-editor {
+  padding: 8px 14px;
+  background: var(--color-sage);
+  border: 1px solid var(--color-green);
+  border-radius: 8px;
+  color: var(--color-green-dark);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prontuario-btn-usar-editor:hover {
+  background: rgba(46, 142, 96, 0.12);
+}
+
+.criar-modelo-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 140px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.criar-modelo-textarea:focus {
+  border-color: var(--color-green);
+}
+
+.prontuario-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--color-border-light);
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Modal Dados do paciente */
+.prontuario-modal.dados-paciente-modal {
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dados-paciente-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 24px 0;
+  border-bottom: 1px solid var(--color-border-light);
+  background: #f8fafc;
+}
+
+.dados-paciente-tab {
+  padding: 10px 14px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dados-paciente-tab:hover {
+  border-color: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+.dados-paciente-tab.active {
+  background: #2E8E60;
+  border-color: #2E8E60;
+  color: white;
+}
+
+.dados-paciente-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+}
+
+.dados-paciente-ultimo-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dados-paciente-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.dados-paciente-textarea:focus {
+  border-color: #2E8E60;
+  box-shadow: 0 0 0 2px rgba(46, 142, 96, 0.15);
+}
+
+.dados-paciente-actions {
+  margin-bottom: 24px;
+}
+
+.dados-paciente-historico {
+  border-top: 1px solid var(--color-border-light);
+  padding-top: 16px;
+}
+
+.dados-paciente-historico-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dados-paciente-historico-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.dados-paciente-historico-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dados-paciente-historico-item {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-light);
+}
+
+.dados-paciente-historico-data {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.dados-paciente-historico-texto {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dados-paciente-historico-details {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.dados-paciente-historico-details summary {
+  cursor: pointer;
+  color: #2E8E60;
+  font-weight: 500;
+}
+
+.dados-paciente-historico-full {
+  margin: 8px 0 0;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .prontuario-paciente-page {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .prontuario-paciente-header {
+    padding: 14px 16px;
+  }
+
+  .prontuario-paciente-breadcrumb {
+    margin-bottom: 8px;
+  }
+
+  .prontuario-paciente-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .prontuario-paciente-header-user {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .prontuario-paciente-toast {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+
+  .prontuario-paciente-layout {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .prontuario-paciente-timeline {
+    width: 100%;
+    max-height: 320px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .prontuario-paciente-timeline-scroll {
+    max-height: 240px;
+  }
+
+  .prontuario-paciente-anamnese {
+    padding: 16px;
+    overflow: visible;
+  }
+
+  .prontuario-anamnese-editor-header {
+    flex-wrap: wrap;
+  }
+
+  .prontuario-paciente-anamnese-textarea,
+  .prontuario-paciente-anamnese-editor {
+    min-height: 280px;
+  }
+}
