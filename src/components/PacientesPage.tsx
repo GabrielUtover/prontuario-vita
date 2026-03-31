@@ -123,6 +123,7 @@ export function PacientesPage() {
   const [nomeConfirmacao, setNomeConfirmacao] = useState('')
   const [confirmacaoErro, setConfirmacaoErro] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [openActionsDropdownId, setOpenActionsDropdownId] = useState<string | null>(null)
   const [agendaDia, setAgendaDia] = useState<AgendaItem[]>([])
   const [agendaPopupOpen, setAgendaPopupOpen] = useState(false)
@@ -407,6 +408,29 @@ export function PacientesPage() {
     e.preventDefault()
     
     try {
+      setErrorMessage('')
+
+      const cpfLimpo = (formData.cpf || '').trim()
+      if (cpfLimpo) {
+        let query = supabase
+          .from('pacientes')
+          .select('id')
+          .eq('cpf', cpfLimpo)
+          .limit(1)
+
+        if (isEditing && selectedPaciente) {
+          query = query.neq('id', selectedPaciente.id)
+        }
+
+        const { data: cpfExistente, error: cpfError } = await query
+        if (cpfError) throw cpfError
+
+        if (cpfExistente && cpfExistente.length > 0) {
+          setErrorMessage('CPF já cadastrado. Verifique e tente novamente.')
+          return
+        }
+      }
+
       if (isEditing && selectedPaciente) {
         // Editar paciente existente
         const { error } = await supabase
@@ -467,6 +491,7 @@ export function PacientesPage() {
     } catch (err) {
       console.error('Erro ao salvar paciente:', err)
       setSuccessMessage('')
+      setErrorMessage('Erro ao salvar paciente. Tente novamente.')
     }
   }
 
@@ -522,6 +547,18 @@ export function PacientesPage() {
             <polyline points="22,4 12,14.01 9,11.01"/>
           </svg>
           {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="error-message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {errorMessage}
         </div>
       )}
 
